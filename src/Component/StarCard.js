@@ -1,29 +1,27 @@
-import React, { useState } from "react";
+import React from "react";
 
 //Components
 import utils from "./StarCardUtil";
 import PlayNumber from "./PlayNumber";
 import StarsDisplay from "./StarsDisplay";
 import PlayAgain from "./PlayAgain";
+import useGameState from "../Container_Hooks/useGameState";
 
 import "./StarCard.css";
 
-const StarCard = () => {
-  //Set State Logic
-  const [stars, setStars] = useState(utils.random(1, 9));
-  //UI Logic
-  const [availableNum, setAvailableNum] = useState(utils.range(1, 9));
-  const [candidateNum, setCandidateNum] = useState([]);
+const StarCard = props => {
+  const {
+    stars,
+    availableNum,
+    candidateNum,
+    secondsLeft,
+    setGameState
+  } = useGameState();
 
   //Conditions
   const candidateAreWrong = utils.sum(candidateNum) > stars;
-  const gameIsDone = availableNum.length === 0;
-
-  const resetGame = () => {
-    setStars(utils.random(1, 9));
-    setAvailableNum(utils.range(1, 9));
-    setCandidateNum([]);
-  };
+  const gameStatus =
+    availableNum.length === 0 ? "won" : secondsLeft === 0 ? "lost" : "active";
 
   const numberStatus = number => {
     if (!availableNum.includes(number)) {
@@ -36,7 +34,7 @@ const StarCard = () => {
   };
 
   const onNumberClick = (number, currentStatus) => {
-    if (currentStatus === "used") {
+    if (gameStatus !== "active" || currentStatus === "used") {
       return;
     }
     //New candidate Num
@@ -45,17 +43,7 @@ const StarCard = () => {
         ? candidateNum.concat(number)
         : candidateNum.filter(cn => cn !== number);
 
-    if (utils.sum(newCandidateNums) !== stars) {
-      setCandidateNum(newCandidateNums);
-    } else {
-      const newAvailableNums = availableNum.filter(
-        n => !newCandidateNums.includes(n)
-      );
-      //redraw stars(from available)
-      setStars(utils.randomSumIn(newAvailableNums, 9));
-      setAvailableNum(newAvailableNums);
-      setCandidateNum([]);
-    }
+    setGameState(newCandidateNums);
   };
 
   return (
@@ -65,8 +53,8 @@ const StarCard = () => {
       </div>
       <div className="body">
         <div className="left">
-          {gameIsDone ? (
-            <PlayAgain onClick={resetGame} />
+          {gameStatus !== "active" ? (
+            <PlayAgain onClick={props.startNewGame} gameStatus={gameStatus} />
           ) : (
             <StarsDisplay count={stars} />
           )}
@@ -82,7 +70,7 @@ const StarCard = () => {
           ))}
         </div>
       </div>
-      <div className="timer">Time Remaining: 10</div>
+      <div className="timer">Time Remaining: {secondsLeft} </div>
     </div>
   );
 };

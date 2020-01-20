@@ -1,6 +1,6 @@
 import React from "react";
 
-import StarCard from "./Component/StarCard";
+import StarCard from "./Component/StarMatch";
 
 import "./App.css";
 
